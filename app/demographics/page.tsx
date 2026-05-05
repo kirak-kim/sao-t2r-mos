@@ -9,8 +9,8 @@ const AGE_RANGES = ['10대', '20대', '30대', '40대', '50대 이상'];
 const GENDERS = ['남성', '여성', '기타', '밝히고 싶지 않음'];
 const AUDIO_BACKGROUNDS = [
   { value: 'naive', label: '비전공자 (음악/음향 관련 전공/직업 없음)' },
-  { value: 'musician', label: '음악인 (악기 연주, 작곡, 노래 등)' },
-  { value: 'engineer', label: '음향/오디오 전공자 또는 관련 종사자' },
+  { value: 'musician', label: '취미 음악인 (악기 연주, 작곡, 노래 등)' },
+  { value: 'engineer', label: '음악/음향/오디오 전공자 또는 관련 종사자' },
 ];
 
 export default function DemographicsPage() {
