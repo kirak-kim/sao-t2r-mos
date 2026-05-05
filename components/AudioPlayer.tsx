@@ -22,29 +22,9 @@ export default function AudioPlayer({
   registerStop,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const ctxRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const [playing, setPlaying] = useState(false);
   const [playCount, setPlayCount] = useState(0);
   const [progress, setProgress] = useState(0);
-
-  // Wire up Web Audio API on mount to ensure mono → both ears
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const ctx = new AudioContext();
-    ctxRef.current = ctx;
-
-    const source = ctx.createMediaElementSource(audio);
-    sourceRef.current = source;
-    source.connect(ctx.destination);
-
-    return () => {
-      ctx.close();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     setPlaying(false);
@@ -78,8 +58,6 @@ export default function AudioPlayer({
       setPlaying(false);
     } else {
       if (exhausted) return;
-      // Resume AudioContext if suspended (browser autoplay policy)
-      ctxRef.current?.resume();
       onPlay?.();
       audio.play();
       setPlaying(true);

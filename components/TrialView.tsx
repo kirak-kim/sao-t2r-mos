@@ -116,7 +116,7 @@ export default function TrialView({
             <AudioPlayer
               key={`dry-${trial.room.id}-${trial.condition}`}
               src={drySrc}
-              label="참고 음원 (원본 발화, 공간 음향 없음)"
+              label="참고 음원 (공간 음향 없음)"
               registerStop={registerDryStop}
               onPlay={handleDryPlay}
             />

@@ -61,8 +61,12 @@ export default function HeadphoneCheckPage() {
     }
 
     merger.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 1.2);
+
+    // Resume context first (browser autoplay policy), then start
+    ctx.resume().then(() => {
+      osc.start();
+      osc.stop(ctx.currentTime + 1.2);
+    });
 
     osc.onended = () => {
       ctx.close();
