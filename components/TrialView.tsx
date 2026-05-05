@@ -122,7 +122,7 @@ export default function TrialView({
             />
 
             {/* Wet audio */}
-            <p className="text-xs text-gray-500">※ 평가 음원은 최대 3회까지 들을 수 있습니다 (다시 듣기 포함)</p>
+            <p className="text-xs text-gray-500">※ 평가 음원은 최대 3회까지 다시 들을 수 있습니다.</p>
             <AudioPlayer
               key={`wet-${trial.room.id}-${trial.condition}`}
               src={wetSrc}
