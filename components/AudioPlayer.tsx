@@ -22,6 +22,7 @@ export default function AudioPlayer({
   registerStop,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const restartedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [playCount, setPlayCount] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -64,12 +65,30 @@ export default function AudioPlayer({
     }
   };
 
-  const handleEnded = () => {
-    setPlaying(false);
+  const handleRestart = () => {
+    const audio = audioRef.current;
+    if (!audio || exhausted) return;
+    onPlay?.();
+    restartedRef.current = true;
+    audio.currentTime = 0;
+    audio.play();
+    setPlaying(true);
     const next = playCount + 1;
     setPlayCount(next);
     onPlayCountChange?.(next);
+  };
+
+  const handleEnded = () => {
+    setPlaying(false);
     setProgress(0);
+    // restart already counted; only count on natural end
+    if (restartedRef.current) {
+      restartedRef.current = false;
+      return;
+    }
+    const next = playCount + 1;
+    setPlayCount(next);
+    onPlayCountChange?.(next);
   };
 
   const handleTimeUpdate = () => {
@@ -87,11 +106,12 @@ export default function AudioPlayer({
         onTimeUpdate={handleTimeUpdate}
         preload="auto"
       />
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        {/* Play/Pause */}
         <button
           onClick={handleToggle}
           disabled={disabled || exhausted}
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors shrink-0
             ${exhausted || disabled ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
         >
           {playing ? (
@@ -103,6 +123,18 @@ export default function AudioPlayer({
               <polygon points="5,3 19,12 5,21" />
             </svg>
           )}
+        </button>
+        {/* Restart */}
+        <button
+          onClick={handleRestart}
+          disabled={disabled || exhausted}
+          title="처음부터 다시 듣기"
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shrink-0
+            ${exhausted || disabled ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
+        >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+          </svg>
         </button>
         <div className="flex-1">
           <div className="flex justify-between items-center mb-1">

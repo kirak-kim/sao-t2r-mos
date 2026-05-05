@@ -15,7 +15,7 @@ export default function LikertScale({ question, subtext, anchorLeft, anchorRight
       <p className="text-sm font-medium text-gray-800 mb-1">{question}</p>
       {subtext && <p className="text-xs text-gray-500 mb-3">{subtext}</p>}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500 w-20 text-right shrink-0">{anchorLeft}</span>
+        <span className="text-xs text-gray-500 w-24 text-right shrink-0">{anchorLeft}</span>
         <div className="flex gap-3 flex-1 justify-center">
           {[1, 2, 3, 4, 5].map(n => (
             <label key={n} className="flex flex-col items-center gap-1 cursor-pointer">
@@ -31,7 +31,7 @@ export default function LikertScale({ question, subtext, anchorLeft, anchorRight
             </label>
           ))}
         </div>
-        <span className="text-xs text-gray-500 w-20 shrink-0">{anchorRight}</span>
+        <span className="text-xs text-gray-500 w-24 shrink-0">{anchorRight}</span>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadSession, saveSession } from '@/lib/session';
 
@@ -28,65 +28,71 @@ export default function HeadphoneCheckPage() {
   const [failCount, setFailCount] = useState(0);
   const ctxRef = useRef<AudioContext | null>(null);
 
+  // Create AudioContext on first user interaction so it's already running when playTone is called
+  const ensureCtx = useCallback(() => {
+    if (!ctxRef.current || ctxRef.current.state === 'closed') {
+      ctxRef.current = new AudioContext();
+    }
+    return ctxRef.current;
+  }, []);
+
+  useEffect(() => {
+    return () => { ctxRef.current?.close(); };
+  }, []);
+
   const playTone = useCallback((side: Side) => {
     if (playing) return;
     setPlaying(true);
-    const ctx = new AudioContext();
-    ctxRef.current = ctx;
 
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    const merger = ctx.createChannelMerger(2);
+    const ctx = ensureCtx();
 
-    osc.frequency.value = 440;
-    osc.type = 'sine';
-    gainNode.gain.value = 0.5;
+    const playNow = () => {
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      const merger = ctx.createChannelMerger(2);
 
-    // Route to left or right only
-    if (side === 'left') {
-      osc.connect(gainNode);
-      gainNode.connect(merger, 0, 0); // left channel
-      // silence right
-      const silentGain = ctx.createGain();
-      silentGain.gain.value = 0;
-      osc.connect(silentGain);
-      silentGain.connect(merger, 0, 1);
-    } else {
-      osc.connect(gainNode);
-      gainNode.connect(merger, 0, 1); // right channel
-      const silentGain = ctx.createGain();
-      silentGain.gain.value = 0;
-      osc.connect(silentGain);
-      silentGain.connect(merger, 0, 0);
-    }
+      osc.frequency.value = 440;
+      osc.type = 'sine';
+      gainNode.gain.value = 0.5;
 
-    merger.connect(ctx.destination);
+      if (side === 'left') {
+        osc.connect(gainNode);
+        gainNode.connect(merger, 0, 0);
+        const silent = ctx.createGain();
+        silent.gain.value = 0;
+        silent.connect(merger, 0, 1);
+      } else {
+        osc.connect(gainNode);
+        gainNode.connect(merger, 0, 1);
+        const silent = ctx.createGain();
+        silent.gain.value = 0;
+        silent.connect(merger, 0, 0);
+      }
 
-    // Resume context first (browser autoplay policy), then start
-    ctx.resume().then(() => {
-      osc.start();
+      merger.connect(ctx.destination);
+      osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 1.2);
-    });
-
-    osc.onended = () => {
-      ctx.close();
-      setPlaying(false);
+      osc.onended = () => setPlaying(false);
     };
-  }, [playing]);
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(playNow);
+    } else {
+      playNow();
+    }
+  }, [playing, ensureCtx]);
 
   const handleAnswer = (answer: Side) => {
     const check = checks[currentIdx];
     const correct = answer === check.side;
 
     if (!correct) {
-      const newFailCount = failCount + 1;
-      setFailCount(newFailCount);
+      setFailCount(prev => prev + 1);
       setFailed(true);
       return;
     }
 
     if (currentIdx + 1 >= TOTAL_CHECKS) {
-      // Passed
       const session = loadSession();
       if (session) {
         session.headphoneCheckPassed = true;
