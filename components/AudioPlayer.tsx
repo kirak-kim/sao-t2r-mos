@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 interface AudioPlayerProps {
   src: string;
@@ -8,7 +8,7 @@ interface AudioPlayerProps {
   maxPlays?: number;
   onPlayCountChange?: (count: number) => void;
   disabled?: boolean;
-  onPlay?: () => void; // called just before this player starts playing
+  onPlay?: () => void;
   registerStop?: (fn: () => void) => void;
 }
 
@@ -22,9 +22,29 @@ export default function AudioPlayer({
   registerStop,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const [playing, setPlaying] = useState(false);
   const [playCount, setPlayCount] = useState(0);
   const [progress, setProgress] = useState(0);
+
+  // Wire up Web Audio API on mount to ensure mono → both ears
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const ctx = new AudioContext();
+    ctxRef.current = ctx;
+
+    const source = ctx.createMediaElementSource(audio);
+    sourceRef.current = source;
+    source.connect(ctx.destination);
+
+    return () => {
+      ctx.close();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setPlaying(false);
@@ -36,29 +56,32 @@ export default function AudioPlayer({
     }
   }, [src]);
 
-  useEffect(() => {
-    if (registerStop) {
-      registerStop(() => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-        setPlaying(false);
-      });
+  const stop = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
-  }, [registerStop]);
+    setPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    registerStop?.(stop);
+  }, [registerStop, stop]);
 
   const exhausted = maxPlays !== undefined && playCount >= maxPlays;
 
   const handleToggle = () => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
     if (playing) {
-      audioRef.current.pause();
+      audio.pause();
       setPlaying(false);
     } else {
       if (exhausted) return;
+      // Resume AudioContext if suspended (browser autoplay policy)
+      ctxRef.current?.resume();
       onPlay?.();
-      audioRef.current.play();
+      audio.play();
       setPlaying(true);
     }
   };
@@ -121,7 +144,7 @@ export default function AudioPlayer({
         </div>
       </div>
       {exhausted && (
-        <p className="text-xs text-red-500 mt-2 ml-13">최대 재생 횟수에 도달했습니다.</p>
+        <p className="text-xs text-red-500 mt-2">최대 재생 횟수에 도달했습니다.</p>
       )}
     </div>
   );

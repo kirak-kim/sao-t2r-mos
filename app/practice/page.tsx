@@ -28,7 +28,7 @@ export default function PracticePage() {
         session.practiceComplete = true;
         saveSession(session);
       }
-      router.push('/trial');
+      router.push('/ready');
     } else {
       setCurrentIdx(prev => prev + 1);
     }

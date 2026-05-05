@@ -92,12 +92,14 @@ export default function TrialView({
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Room image */}
-          <div className="relative w-full h-64 bg-gray-100">
+          <div className="w-full bg-gray-100">
             <Image
               src={imgSrc}
               alt="공간 이미지"
-              fill
-              className="object-cover"
+              width={0}
+              height={0}
+              sizes="100vw"
+              className="w-full h-auto"
               priority
             />
           </div>
@@ -140,6 +142,7 @@ export default function TrialView({
               />
               <LikertScale
                 question="Q2. 음질이 자연스럽고 artifact 없이 들리나요?"
+                subtext="Artifact: 지직거림, 금속성 울림, 이상한 노이즈 등 부자연스러운 소리"
                 anchorLeft="매우 부자연스럽다"
                 anchorRight="매우 자연스럽다"
                 value={quality}
