@@ -48,7 +48,7 @@ export default function WelcomePage() {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2 text-center">
-            실내 음향 생성 AI 평가 실험에 참여해주세요
+            실내 음향 생성 AI 평가 실험
           </h1>
           <p className="text-center text-gray-500 text-sm mb-8">약 25~30분 소요</p>
 
